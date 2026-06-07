@@ -1,0 +1,25 @@
+# ---- Large data (regenerate with cleaning_script/cleaning_all_countries.py) ----
+# raw Kaggle video CSVs (50-73 MB each) - download from Kaggle into data/raw/
+data/raw/*.csv
+# generated combined dataset
+data/cleaned/*.csv
+# stray PBIX copy (the real one lives in dashboard/, tracked via Git LFS)
+data/cleaned/*.pbix
+# no loose CSVs in the repo root
+/*.csv
+
+# ---- Python ----
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+.venv/
+venv/
+env/
+
+# ---- Streamlit ----
+.streamlit/secrets.toml
+
+# ---- OS / editor junk ----
+.DS_Store
+Thumbs.db
+*.tmp
