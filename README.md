@@ -29,6 +29,9 @@ youtube-trending-dashboard/
 ├── BUILD_GUIDE.md                    ← step-by-step Power BI build instructions
 ├── app.py                            ← Streamlit dashboard gallery
 ├── requirements.txt                  ← Streamlit app dependencies
+├── public/                           ← static gallery for Vercel (index.html + img/)
+├── vercel.json                       ← Vercel static-deploy config
+├── DEPLOY_VERCEL.md                  ← Vercel deployment guide
 ├── cleaning_script/
 │   └── cleaning_all_countries.py     ← the full cleaning pipeline (10 countries)
 ├── dashboard/
@@ -121,16 +124,26 @@ average days-to-trend over time, and a **speed-vs-engagement** scatter.
 
 ## 🚀 Share / Host the Dashboard
 
-A **Streamlit** app (`app.py`) presents the exported dashboard pages as an interactive gallery —
-ideal for hosting on **Streamlit Community Cloud** when you can't publish to the Power BI Service.
+Two ready-to-go ways to put the gallery online:
+
+### Static site on Vercel
+A self-contained static gallery lives in `public/` (`index.html` + screenshots). It deploys on
+Vercel with no build step — see **[DEPLOY_VERCEL.md](DEPLOY_VERCEL.md)**.
+
+```bash
+npm i -g vercel && vercel --prod
+```
+Or import the repo at [vercel.com/new](https://vercel.com/new) — `vercel.json` handles the rest.
+
+### Interactive Streamlit app
+`app.py` presents the pages as an interactive gallery with per-page breakdowns — ideal for
+**Streamlit Community Cloud**.
 
 ```bash
 pip install -r requirements.txt
 streamlit run app.py
 ```
-
-Then deploy free: push this repo to GitHub → [share.streamlit.io](https://share.streamlit.io)
-→ **New app** → point it at `app.py`.
+Deploy free: push to GitHub → [share.streamlit.io](https://share.streamlit.io) → point at `app.py`.
 
 ---
 

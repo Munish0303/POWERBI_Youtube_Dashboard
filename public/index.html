@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>YouTube Trending — Global Analytics Dashboard</title>
+<meta name="description" content="End-to-end analytics on the YouTube Trending dataset across all 10 countries: Python cleaning, Power BI modelling, and a 5-page interactive dashboard." />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0a0c10; --bg2:#0f131a;
+    --panel:rgba(255,255,255,.035); --panel-solid:#141923;
+    --border:rgba(255,255,255,.09); --border-strong:rgba(255,255,255,.16);
+    --text:#eef1f6; --muted:#98a2b3; --faint:#6b7480;
+    --red:#ff0040; --red-soft:#ff3b63; --blue:#5b8dff; --green:#33d6a6;
+    --radius:18px; --radius-sm:12px;
+    --shadow:0 18px 50px -12px rgba(0,0,0,.6);
+    --maxw:1120px;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;font-family:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    color:var(--text);line-height:1.65;-webkit-font-smoothing:antialiased;
+    background:
+      radial-gradient(900px 500px at 80% -10%, rgba(255,0,64,.16), transparent 60%),
+      radial-gradient(800px 500px at 0% 0%, rgba(91,141,255,.12), transparent 55%),
+      var(--bg);
+    background-attachment:fixed;}
+  a{color:var(--blue);text-decoration:none}
+  a:hover{color:#9bbbff}
+  .wrap{max-width:var(--maxw);margin:0 auto;padding:0 22px}
+  h1,h2,h3,h4{letter-spacing:-.02em;line-height:1.2}
+
+  /* ---------- nav ---------- */
+  header.nav{position:sticky;top:0;z-index:60;
+    background:rgba(10,12,16,.72);backdrop-filter:blur(14px) saturate(150%);
+    border-bottom:1px solid var(--border)}
+  .nav .wrap{display:flex;align-items:center;gap:20px;height:62px}
+  .brand{font-weight:800;font-size:1.02rem;display:flex;align-items:center;gap:8px}
+  .brand .pill{background:var(--red);color:#fff;font-size:.62rem;font-weight:700;
+    padding:3px 7px;border-radius:6px;letter-spacing:.04em}
+  .nav nav{display:flex;gap:6px;margin-left:auto}
+  .nav nav a{color:var(--muted);font-size:.88rem;font-weight:500;padding:7px 11px;border-radius:8px}
+  .nav nav a:hover{color:var(--text);background:var(--panel);text-decoration:none}
+  .nav .gh{border:1px solid var(--border-strong);color:var(--text)}
+  @media(max-width:760px){.nav nav a:not(.gh){display:none}}
+
+  /* ---------- hero ---------- */
+  .hero{text-align:center;padding:84px 0 26px}
+  .eyebrow{display:inline-block;font-size:.78rem;font-weight:600;color:var(--red-soft);
+    background:rgba(255,0,64,.1);border:1px solid rgba(255,0,64,.25);
+    padding:6px 14px;border-radius:999px;margin-bottom:22px;letter-spacing:.04em}
+  .hero h1{font-size:clamp(2rem,5vw,3.25rem);font-weight:800;margin:0 0 16px;
+    background:linear-gradient(180deg,#fff,#b9c2d0);-webkit-background-clip:text;
+    background-clip:text;-webkit-text-fill-color:transparent}
+  .hero p{color:var(--muted);max-width:720px;margin:0 auto;font-size:1.12rem}
+  .badges{display:flex;gap:9px;justify-content:center;flex-wrap:wrap;margin-top:26px}
+  .badge{background:var(--panel);border:1px solid var(--border);color:var(--muted);
+    padding:7px 14px;border-radius:999px;font-size:.82rem;font-weight:500}
+  .badge b{color:var(--text);font-weight:600}
+
+  /* ---------- kpis ---------- */
+  .kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:16px;margin:46px 0 8px}
+  .kpi{background:linear-gradient(180deg,var(--panel),transparent);
+    border:1px solid var(--border);border-radius:var(--radius);padding:22px 16px;text-align:center;
+    transition:transform .25s,border-color .25s}
+  .kpi:hover{transform:translateY(-4px);border-color:var(--border-strong)}
+  .kpi .v{font-size:1.9rem;font-weight:800;
+    background:linear-gradient(180deg,#fff,#c4ccd8);-webkit-background-clip:text;
+    background-clip:text;-webkit-text-fill-color:transparent}
+  .kpi .l{color:var(--muted);font-size:.82rem;margin-top:6px;font-weight:500}
+
+  /* ---------- sections ---------- */
+  section{padding:54px 0}
+  .sec-head{margin-bottom:30px}
+  .sec-head .tag{font-size:.78rem;font-weight:700;color:var(--red-soft);letter-spacing:.08em;text-transform:uppercase}
+  .sec-head h2{font-size:clamp(1.5rem,3vw,2rem);font-weight:800;margin:8px 0 6px}
+  .sec-head p{color:var(--muted);margin:0;max-width:680px}
+
+  /* ---------- card grids ---------- */
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px}
+  .card{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);
+    padding:22px;transition:transform .25s,border-color .25s,background .25s}
+  .card:hover{transform:translateY(-4px);border-color:var(--border-strong);background:rgba(255,255,255,.055)}
+  .card .ico{font-size:1.5rem;margin-bottom:10px}
+  .card h3{margin:0 0 8px;font-size:1.05rem;font-weight:700}
+  .card p{color:var(--muted);font-size:.93rem;margin:0}
+
+  /* ---------- page blocks ---------- */
+  .page{margin-bottom:40px}
+  .page-grid{display:grid;grid-template-columns:1.15fr .85fr;gap:34px;align-items:start}
+  .page:nth-child(even) .page-grid{grid-template-columns:.85fr 1.15fr}
+  .page:nth-child(even) .frame-col{order:2}
+
+  /* browser-framed screenshot */
+  .frame{border:1px solid var(--border-strong);border-radius:var(--radius);overflow:hidden;
+    background:var(--panel-solid);box-shadow:var(--shadow);transition:transform .3s}
+  .frame:hover{transform:translateY(-5px)}
+  .frame .bar{display:flex;align-items:center;gap:7px;padding:11px 14px;
+    background:#0d1118;border-bottom:1px solid var(--border)}
+  .frame .bar i{width:11px;height:11px;border-radius:50%;display:inline-block}
+  .frame .bar i:nth-child(1){background:#ff5f57}
+  .frame .bar i:nth-child(2){background:#febc2e}
+  .frame .bar i:nth-child(3){background:#28c840}
+  .frame .bar .u{margin-left:10px;font-size:.74rem;color:var(--faint);
+    background:#070a0e;padding:4px 12px;border-radius:6px;flex:1;text-align:center;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .frame img{display:block;width:100%;height:auto;cursor:zoom-in}
+
+  .page h3{font-size:1.5rem;font-weight:800;margin:2px 0 8px}
+  .page .summary{color:var(--muted);margin:0 0 22px;font-size:1rem}
+  .block{margin-bottom:18px}
+  .block h4{margin:0 0 9px;font-size:.78rem;text-transform:uppercase;letter-spacing:.07em;
+    color:var(--blue);display:flex;align-items:center;gap:7px}
+  ul.clean{margin:0;padding-left:18px}
+  ul.clean li{margin:6px 0;color:var(--muted);font-size:.93rem}
+  ul.clean li strong{color:var(--text);font-weight:600}
+  .chips{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:6px}
+  .chip{background:var(--panel);border:1px solid var(--border);border-radius:7px;
+    padding:4px 10px;font-size:.8rem;color:var(--text);font-weight:500}
+  .tipline{color:var(--muted);font-size:.9rem;margin:0}
+  .read{margin-top:16px;background:linear-gradient(90deg,rgba(255,0,64,.1),transparent);
+    border-left:3px solid var(--red);border-radius:10px;padding:13px 16px;font-size:.93rem}
+  code{background:rgba(255,255,255,.08);padding:2px 6px;border-radius:5px;font-size:.85em;
+    font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+
+  @media(max-width:860px){
+    .kpis{grid-template-columns:repeat(2,1fr)}
+    .page-grid,.page:nth-child(even) .page-grid{grid-template-columns:1fr}
+    .page:nth-child(even) .frame-col{order:0}
+  }
+
+  /* divider */
+  .div{height:1px;background:linear-gradient(90deg,transparent,var(--border-strong),transparent);margin:8px 0}
+
+  /* footer */
+  footer{padding:44px 0 70px;color:var(--muted);font-size:.9rem;text-align:center;border-top:1px solid var(--border)}
+  footer a{font-weight:500}
+
+  /* lightbox */
+  .lb{position:fixed;inset:0;background:rgba(5,7,10,.92);backdrop-filter:blur(6px);
+    display:none;align-items:center;justify-content:center;z-index:100;padding:30px;cursor:zoom-out}
+  .lb.open{display:flex}
+  .lb img{max-width:96vw;max-height:92vh;border-radius:12px;border:1px solid var(--border-strong);
+    box-shadow:0 30px 80px rgba(0,0,0,.7)}
+  .lb .close{position:absolute;top:20px;right:26px;font-size:2rem;color:#fff;opacity:.7;cursor:pointer}
+  .lb .close:hover{opacity:1}
+</style>
+</head>
+<body>
+
+<header class="nav">
+  <div class="wrap">
+    <span class="brand">🎬 YouTube Trending <span class="pill">GLOBAL</span></span>
+    <nav>
+      <a href="#overview">Overview</a>
+      <a href="#country">Country</a>
+      <a href="#content">Content</a>
+      <a href="#channels">Channels</a>
+      <a href="#timing">Timing</a>
+      <a href="#interact">Interactions</a>
+      <a class="gh" href="https://github.com/Munish0303/youtube-trending-dashboard">GitHub ↗</a>
+    </nav>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <!-- HERO -->
+  <div class="hero">
+    <span class="eyebrow">PYTHON · POWER BI · 10 COUNTRIES</span>
+    <h1>YouTube Trending<br>Global Analytics Dashboard</h1>
+    <p>An end-to-end analytics project on the <strong style="color:var(--text)">YouTube Trending Videos</strong>
+       dataset across all 10 countries — Python cleaning, Power BI modelling, and a 5-page interactive dashboard.</p>
+    <div class="badges">
+      <span class="badge">🐍 <b>pandas · ftfy</b></span>
+      <span class="badge">📊 <b>Power BI</b></span>
+      <span class="badge">🌍 <b>10 countries</b></span>
+      <span class="badge">🧹 <b>342,656 rows</b></span>
+      <span class="badge">🗓️ <b>2017–2018</b></span>
+    </div>
+  </div>
+
+  <!-- KPIs -->
+  <div class="kpis">
+    <div class="kpi"><div class="v">10</div><div class="l">Countries</div></div>
+    <div class="kpi"><div class="v">342K</div><div class="l">Cleaned rows</div></div>
+    <div class="kpi"><div class="v">171K</div><div class="l">Unique videos</div></div>
+    <div class="kpi"><div class="v">34K</div><div class="l">Unique channels</div></div>
+    <div class="kpi"><div class="v">3.18%</div><div class="l">Avg engagement</div></div>
+  </div>
+
+  <!-- INSIGHTS -->
+  <section id="insights">
+    <div class="sec-head">
+      <span class="tag">Findings</span>
+      <h2>💡 Key Insights</h2>
+      <p>What the data says once all 10 countries are joined into one model.</p>
+    </div>
+    <div class="cards">
+      <div class="card"><div class="ico">🎵</div><h3>Reach</h3><p>Music &amp; Entertainment dominate global trending views by a wide margin.</p></div>
+      <div class="card"><div class="ico">🌍</div><h3>Country mix</h3><p>India &amp; Russia skew to Entertainment/Film; US &amp; GB skew to Music &amp; Comedy.</p></div>
+      <div class="card"><div class="ico">🤝</div><h3>Engagement</h3><p>Nonprofits &amp; Education drive the highest engagement rate despite lower raw views.</p></div>
+      <div class="card"><div class="ico">⚡</div><h3>Speed</h3><p>Most videos trend fast — median ~1 day, average ~7.6 days to trend.</p></div>
+      <div class="card"><div class="ico">🏷️</div><h3>Distribution</h3><p>Most trending videos sit in the 100K–1M views band; 20M+ is rare.</p></div>
+    </div>
+  </section>
+
+  <div class="div"></div>
+
+  <!-- ===== PAGES ===== -->
+  <section style="padding-bottom:10px">
+    <div class="sec-head">
+      <span class="tag">The Dashboard</span>
+      <h2>📑 Five Pages, One Story</h2>
+      <p>Each page below shows its visuals, the slicers/filters that drive it, and what the tooltips reveal. Click any screenshot to zoom.</p>
+    </div>
+  </section>
+
+  <!-- OVERVIEW -->
+  <div class="page" id="overview">
+    <div class="page-grid">
+      <div class="frame-col">
+        <div class="frame">
+          <div class="bar"><i></i><i></i><i></i><span class="u">Overview · Executive Summary</span></div>
+          <img src="img/overview.png" alt="Overview dashboard page" loading="lazy" onclick="zoom(this)">
+        </div>
+      </div>
+      <div class="text-col">
+        <h3>📊 Overview</h3>
+        <p class="summary">Executive summary across all 10 countries — headline KPIs, a world map, views-over-time with a 7-day moving average, and top categories.</p>
+        <div class="block"><h4>📈 Visuals</h4>
+          <ul class="clean">
+            <li><strong>KPI cards</strong> — Total Views, Engagement %, Countries, Unique Videos &amp; Channels.</li>
+            <li><strong>Dynamic subtitle</strong> — reflects the selected country via a DAX measure.</li>
+            <li><strong>Map</strong> — Total Views by country.</li>
+            <li><strong>Line</strong> — daily views + dashed 7-day moving average.</li>
+          </ul>
+        </div>
+        <div class="block"><h4>🔎 Slicers</h4>
+          <div class="chips"><span class="chip">Country</span><span class="chip">Category</span><span class="chip">Year-Month</span></div>
+        </div>
+        <div class="block"><h4>💬 Tooltips</h4>
+          <p class="tipline">Hover a bubble or line point for the country/date and exact views — e.g. <em>India · 15-05-2018 · 97,006,036</em>.</p>
+        </div>
+        <div class="read">🧭 Pick a country and every visual — KPIs and subtitle included — refilters instantly. The moving average shows direction without daily spikes.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- COUNTRY -->
+  <div class="page" id="country">
+    <div class="page-grid">
+      <div class="frame-col">
+        <div class="frame">
+          <div class="bar"><i></i><i></i><i></i><span class="u">Country Comparison</span></div>
+          <img src="img/country-comparison.png" alt="Country Comparison page" loading="lazy" onclick="zoom(this)">
+        </div>
+      </div>
+      <div class="text-col">
+        <h3>🌍 Country Comparison</h3>
+        <p class="summary">How the 10 countries differ — reach vs engagement, a country × category heat matrix, an efficiency-quadrant scatter, and per-country trend lines.</p>
+        <div class="block"><h4>📈 Visuals</h4>
+          <ul class="clean">
+            <li><strong>Dual-axis combo</strong> — Total Views (columns) vs Engagement % (line): reach vs quality.</li>
+            <li><strong>Matrix heatmap</strong> — country × category, colour-formatted.</li>
+            <li><strong>Scatter</strong> — avg views per video vs engagement (four quadrants).</li>
+            <li><strong>Small multiples</strong> — daily trend, one panel per country.</li>
+          </ul>
+        </div>
+        <div class="block"><h4>🔎 Slicers</h4>
+          <div class="chips"><span class="chip">Country</span><span class="chip">Category</span></div>
+        </div>
+        <div class="block"><h4>💬 Tooltips</h4>
+          <p class="tipline">Hover a matrix cell or bubble to reveal avg views / engagement % / trending entries for that country–category combo.</p>
+        </div>
+        <div class="read">🧭 Tall bars + low line = lots of views, weak engagement. The scatter's top-right quadrant is the sweet spot: high reach AND engagement.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="page" id="content">
+    <div class="page-grid">
+      <div class="frame-col">
+        <div class="frame">
+          <div class="bar"><i></i><i></i><i></i><span class="u">Category &amp; Content</span></div>
+          <img src="img/category-content.png" alt="Category and Content page" loading="lazy" onclick="zoom(this)">
+        </div>
+      </div>
+      <div class="text-col">
+        <h3>🏷️ Category &amp; Content</h3>
+        <p class="summary">What content performs — engagement and like/dislike by category, a treemap of total views, and the view-size distribution of trending videos.</p>
+        <div class="block"><h4>📈 Visuals</h4>
+          <ul class="clean">
+            <li><strong>Bars</strong> — Engagement % and Like/Dislike ratio by category.</li>
+            <li><strong>Treemap</strong> — Total Views by category.</li>
+            <li><strong>Histogram</strong> — trending entries by view-size bucket.</li>
+          </ul>
+        </div>
+        <div class="block"><h4>🔎 Slicers</h4>
+          <div class="chips"><span class="chip">Country</span><span class="chip">Views bucket</span></div>
+        </div>
+        <div class="block"><h4>💬 Tooltips</h4>
+          <p class="tipline">Hover a treemap tile or bar for precise Total Views / Engagement % / ratio for that category.</p>
+        </div>
+        <div class="read">🧭 Reach ≠ engagement: Music wins on raw views, but Nonprofits &amp; Education top the engagement bar.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CHANNELS -->
+  <div class="page" id="channels">
+    <div class="page-grid">
+      <div class="frame-col">
+        <div class="frame">
+          <div class="bar"><i></i><i></i><i></i><span class="u">Channels &amp; Top Videos</span></div>
+          <img src="img/channels-top-videos.png" alt="Channels and Top Videos page" loading="lazy" onclick="zoom(this)">
+        </div>
+      </div>
+      <div class="text-col">
+        <h3>📺 Channels &amp; Top Videos</h3>
+        <p class="summary">Who wins — top channels by views/engagement (with rank &amp; data bars) and a top-videos table with rendered thumbnails. The drill-through destination.</p>
+        <div class="block"><h4>📈 Visuals</h4>
+          <ul class="clean">
+            <li><strong>Channels table</strong> — views, unique videos, engagement %, rank, data bars.</li>
+            <li><strong>Top videos table</strong> — live thumbnails + per-video metrics; one row per video.</li>
+          </ul>
+        </div>
+        <div class="block"><h4>🔎 Slicers</h4>
+          <div class="chips"><span class="chip">Country</span><span class="chip">Category</span><span class="chip">Top-N (5/10/25)</span></div>
+        </div>
+        <div class="block"><h4>💬 Tooltips &amp; drill-through</h4>
+          <p class="tipline">Row hover shows a report-page tooltip of mini stats. Right-click a category/country elsewhere → <em>Drill through</em> → lands here, pre-filtered.</p>
+        </div>
+        <div class="read">🧭 The "show me the videos behind the numbers" page — thumbnails make the top performers tangible.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TIMING -->
+  <div class="page" id="timing">
+    <div class="page-grid">
+      <div class="frame-col">
+        <div class="frame">
+          <div class="bar"><i></i><i></i><i></i><span class="u">Timing &amp; Virality</span></div>
+          <img src="img/timing-virality.png" alt="Timing and Virality page" loading="lazy" onclick="zoom(this)">
+        </div>
+      </div>
+      <div class="text-col">
+        <h3>⏱️ Timing &amp; Virality</h3>
+        <p class="summary">When &amp; how fast — a publish weekday × hour heatmap, a days-to-trend distribution, average days-to-trend over time, and speed vs engagement.</p>
+        <div class="block"><h4>📈 Visuals</h4>
+          <ul class="clean">
+            <li><strong>Heatmap</strong> — Total Views by publish weekday × hour (best time to publish).</li>
+            <li><strong>Histogram</strong> — trending entries by days-to-trend (≤ 30).</li>
+            <li><strong>Scatter</strong> — engagement % vs days-to-trend.</li>
+          </ul>
+        </div>
+        <div class="block"><h4>🔎 Slicers</h4>
+          <div class="chips"><span class="chip">Country</span><span class="chip">Category</span></div>
+        </div>
+        <div class="block"><h4>💬 Tooltips</h4>
+          <p class="tipline">Hover a heatmap cell for exact views in that weekday/hour slot; histogram bars show the count at each days-to-trend value.</p>
+        </div>
+        <div class="read">🧭 Hot cells = publish windows that produced the most trending views. Median time-to-trend is ~1 day.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="div"></div>
+
+  <!-- INTERACTIONS -->
+  <section id="interact">
+    <div class="sec-head">
+      <span class="tag">Interactivity</span>
+      <h2>🕹️ How the Live Dashboard Works</h2>
+      <p>These behaviours are built into the Power BI report. This site is a preview gallery of it.</p>
+    </div>
+    <div class="cards">
+      <div class="card"><div class="ico">🔎</div><h3>Slicers</h3><p>Country, Category, Year-Month &amp; View-bucket filters, <strong style="color:var(--text)">synced across all pages</strong>.</p></div>
+      <div class="card"><div class="ico">🖱️</div><h3>Cross-filtering</h3><p>Click a bar, tile or bubble to filter the rest of the page. Click again to clear.</p></div>
+      <div class="card"><div class="ico">💬</div><h3>Tooltips</h3><p>Hover for exact numbers; some visuals pop a mini report-page tooltip.</p></div>
+      <div class="card"><div class="ico">🔗</div><h3>Drill-through</h3><p>Right-click → Channels &amp; Top Videos, pre-filtered to the selection.</p></div>
+      <div class="card"><div class="ico">🧭</div><h3>Navigation</h3><p>A page navigator moves between the five pages in-report.</p></div>
+    </div>
+  </section>
+
+  <div class="div"></div>
+
+  <!-- PIPELINE -->
+  <section id="pipeline">
+    <div class="sec-head">
+      <span class="tag">Engineering</span>
+      <h2>🔧 Cleaning Pipeline</h2>
+      <p>All 10 countries joined into one analysis-ready fact table.</p>
+    </div>
+    <div class="card" style="background:var(--panel)">
+      <p style="margin-top:0">Joins 10 countries, repairs <code>latin1</code> mojibake with <strong style="color:var(--text)">ftfy</strong>
+         (so Japanese / Korean / Cyrillic / accented titles render correctly), maps per-country categories,
+         derives engagement metrics &amp; <code>days_to_trend</code>, and drops nulls / duplicates / impossible rows.</p>
+      <p style="margin-bottom:0;color:var(--muted)">Result: <strong style="color:var(--green)">375,942 → 342,656 rows, 0 nulls</strong>.
+         See <code>cleaning_script/cleaning_all_countries.py</code> and <code>BUILD_GUIDE.md</code>.</p>
+    </div>
+  </section>
+
+</div>
+
+<footer>
+  <div class="wrap">
+    Built with Python · pandas · ftfy · Power BI &nbsp;·&nbsp;
+    Data: <a href="https://www.kaggle.com/datasets/datasnaek/youtube-new">YouTube Trending — Kaggle</a> &nbsp;·&nbsp;
+    <a href="https://github.com/Munish0303/youtube-trending-dashboard">Source on GitHub ↗</a>
+  </div>
+</footer>
+
+<!-- lightbox -->
+<div class="lb" id="lb" onclick="closeZoom()">
+  <span class="close">&times;</span>
+  <img id="lbimg" src="" alt="Zoomed dashboard page">
+</div>
+
+<script>
+  function zoom(el){
+    var lb=document.getElementById('lb');
+    document.getElementById('lbimg').src=el.src;
+    lb.classList.add('open');
+    document.body.style.overflow='hidden';
+  }
+  function closeZoom(){
+    document.getElementById('lb').classList.remove('open');
+    document.body.style.overflow='';
+  }
+  document.addEventListener('keydown',function(e){if(e.key==='Escape')closeZoom();});
+</script>
+
+</body>
+</html>

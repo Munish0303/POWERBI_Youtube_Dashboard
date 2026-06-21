@@ -1,0 +1,10 @@
+# Only the static site in public/ is needed for Vercel.
+# Keep these out of the deployment upload:
+dashboard/
+data/
+cleaning_script/
+screenshots/
+app.py
+requirements.txt
+*.pbix
+*.csv
