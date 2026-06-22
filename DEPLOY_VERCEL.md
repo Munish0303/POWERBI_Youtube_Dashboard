@@ -24,16 +24,16 @@ static files — no Python, no install, instant deploy.
 ## Option A — Deploy from the Vercel website (easiest)
 1. Push this repo to GitHub (already done).
 2. Go to **https://vercel.com/new** and sign in with GitHub.
-3. **Import** the `youtube-trending-dashboard` repo.
+3. **Import** the `POWERBI_Youtube_Dashboard` repo.
 4. Vercel reads `vercel.json` automatically — leave all build settings empty/default.
 5. Click **Deploy**. In ~20s you get a live URL like
-   `https://youtube-trending-dashboard.vercel.app`.
+   `https://powerbi-youtube-dashboard.vercel.app`.
 6. Every future `git push` to `main` auto-redeploys.
 
 ## Option B — Deploy from the command line
 ```bash
 npm i -g vercel          # one-time
-cd youtube-trending-dashboard
+cd POWERBI_Youtube_Dashboard
 vercel                   # first run: links the project, deploys a preview
 vercel --prod            # promote to your production URL
 ```

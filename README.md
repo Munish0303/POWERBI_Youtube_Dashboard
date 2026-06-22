@@ -24,7 +24,7 @@ a 5-page interactive dashboard → a Streamlit gallery for sharing.
 ## 🗂️ Repository Structure
 
 ```
-youtube-trending-dashboard/
+POWERBI_Youtube_Dashboard/
 ├── README.md                         ← this file
 ├── BUILD_GUIDE.md                    ← step-by-step Power BI build instructions
 ├── app.py                            ← Streamlit dashboard gallery
